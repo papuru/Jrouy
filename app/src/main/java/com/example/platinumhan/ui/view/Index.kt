@@ -1,5 +1,6 @@
 package com.example.platinumhan.ui.view
 
+import android.view.Window
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -26,6 +27,7 @@ fun Index() {
     }
     LaunchedEffect(isDisplay.value) {
         if (isDisplay.value){
+
             snackbarHostState.showSnackbar("  you see me")
         }
     }
@@ -40,6 +42,7 @@ fun Index() {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
+
             Text(text = "snackBarScreen")
             Button(onClick = {
                 isDisplay.value = !isDisplay.value
