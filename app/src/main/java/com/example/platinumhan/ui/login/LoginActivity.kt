@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,15 +56,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -80,10 +88,13 @@ import com.example.platinumhan.R
 import com.example.platinumhan.ui.theme.primaryLight
 import com.example.platinumhan.ui.view.Index
 import com.example.platinumhan.ui.view.User
+import java.util.Timer
 import java.util.logging.Logger
+import kotlin.concurrent.fixedRateTimer
 import kotlin.math.log
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LoginScreen(
 
@@ -93,13 +104,30 @@ fun LoginScreen(
     val isLogin = remember {
         mutableStateOf(false)
     }
+
+    val interactionSource = remember { MutableInteractionSource() }
+
+
+
+    val focusManager = LocalFocusManager.current
+
     val user1 = User("ethen", "dsadasfdfsad")
+
+    val localView = LocalView.current;
 
     val context = LocalContext.current
 
+    val textfield = FocusRequester();
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+
 
     SideEffect {
-        Log.d("LoginScreen", "$context")
+        val window = (localView.context as Activity).window
+        window.statusBarColor = Color.White.toArgb()
+
+        Log.d("LoginScreen", "${localView.context}")
     }
 
 
@@ -107,32 +135,40 @@ fun LoginScreen(
         Index(user1)
     } else {
         Surface(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) {
+                    keyboardController?.hide()
+                    focusManager.clearFocus(true)
+                },
             color = Color.White
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 50.dp)
-                    .padding(horizontal = 10.dp),
+                    .padding(top = 30.dp)
+                    .padding(horizontal = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.hchtm),
                     contentDescription = "A7",
                     modifier = Modifier
-                        .size(100.dp)
+                        .size(150.dp)
                         .clip(RoundedCornerShape(20))
-                        .padding(horizontal = 5.dp),
+                        .padding(horizontal = 5.dp, vertical = 10.dp),
                 )
-                Text(
-                    text = "海宁中国家纺城",
-                    modifier = Modifier.padding(24.dp),
-                    color = Color.LightGray,
-                    fontWeight = FontWeight.W500,
-                    fontSize = 25.sp
-                )
-                LoginForm(isLogin = isLogin)
+//                Text(
+//                    text = "海宁中国家纺城",
+//                    modifier = Modifier.padding(24.dp),
+//                    color = Color.LightGray,
+//                    fontWeight = FontWeight.W500,
+//                    fontSize = 25.sp
+//                )
+                LoginForm(textFocus = textfield)
             }
 
         }
@@ -143,11 +179,16 @@ fun LoginScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginForm(
-    isLogin: MutableState<Boolean>
+    textFocus: FocusRequester
 ) {
+   lateinit var timer: Timer
 
     var count by remember {
-        mutableStateOf(0)
+        mutableStateOf(60)
+    }
+
+    var enable by remember {
+        mutableStateOf(true)
     }
 
     val account = remember {
@@ -156,28 +197,48 @@ fun LoginForm(
     val password = remember {
         mutableStateOf("")
     }
+
+    var isCountDown = false
+
+    LaunchedEffect(count) {
+        if (count == 0) {
+            timer.cancel()
+        }
+    }
+
     val localView = LocalView.current;
 
 
-    val context = LocalContext.current
-
 
     SideEffect {
-        Log.d("LoginForm", "$context")
+        Log.d("LoginForm", "$localView")
     }
+
 
 
     TextField(
         value = account.value,
-        onValueChange = { account.value = it },
+        onValueChange = {
+            account.value = it
+//            if (it.length > 3) {
+//                textFocus.captureFocus()
+//            } else {
+//                textFocus.freeFocus()
+//            }
+        },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp),
-        placeholder = { Text(text = "手机号") },
+            .padding(vertical = 8.dp)
+            .focusRequester(textFocus),
+        label = { Text(text = "手机号") },
         singleLine = true,
         colors = TextFieldDefaults.textFieldColors(
             containerColor = Color.White,
-            placeholderColor = Color.LightGray
+            placeholderColor = Color.LightGray,
+            unfocusedLabelColor = Color.LightGray,
+            focusedLabelColor = Color.LightGray,
+            unfocusedIndicatorColor = Color.Gray,
+            focusedIndicatorColor = primaryLight,
         ),
     )
     TextField(
@@ -187,22 +248,36 @@ fun LoginForm(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp),
-        placeholder = { Text(text = "验证码") },
+            .padding(vertical = 8.dp),
+//            .focusRequester(textFocus),
+        label = { Text(text = "验证码") },
         singleLine = true,
         trailingIcon = {
-            TextButton(
-                onClick = {
-
-                },
-                modifier = Modifier.padding(horizontal = 5.dp)
-            ) {
-                Text(text = "获取验证码")
-            }
+            Text(
+                text = "获取验证码",
+                modifier = Modifier
+                    .padding(horizontal = 5.dp)
+                    .clickable(
+                        interactionSource = remember {
+                            MutableInteractionSource()
+                        },
+                        indication = null,
+                        enabled = enable
+                    ) {
+                        enable = false
+                        timer = fixedRateTimer(period = 1000L) {
+                            count--
+                        }
+                    },
+            )
         },
         colors = TextFieldDefaults.textFieldColors(
             containerColor = Color.White,
-            placeholderColor = Color.LightGray
+            placeholderColor = Color.LightGray,
+            unfocusedLabelColor = Color.LightGray,
+            focusedLabelColor = Color.LightGray,
+            unfocusedIndicatorColor = Color.Gray,
+            focusedIndicatorColor = primaryLight,
         ),
     )
     Button(
@@ -218,6 +293,8 @@ fun LoginForm(
         Text(text = "登录")
     }
 }
+
+
 
 
 @Preview

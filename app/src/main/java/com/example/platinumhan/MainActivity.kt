@@ -23,9 +23,7 @@ class MainActivity : ComponentActivity() {
 //            var isEx = windowSizeClass.heightSizeClass !=  WindowHeightSizeClass.Compact
 //            LoginScreen()
             val user = User("ki", "uhdhhasd")
-            MyAppTheme {
                 LoginScreen()
-            }
         }
 
     }
