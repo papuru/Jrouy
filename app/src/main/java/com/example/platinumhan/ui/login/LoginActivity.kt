@@ -34,6 +34,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -161,13 +162,6 @@ fun LoginScreen(
                         .clip(RoundedCornerShape(20))
                         .padding(horizontal = 5.dp, vertical = 10.dp),
                 )
-//                Text(
-//                    text = "海宁中国家纺城",
-//                    modifier = Modifier.padding(24.dp),
-//                    color = Color.LightGray,
-//                    fontWeight = FontWeight.W500,
-//                    fontSize = 25.sp
-//                )
                 LoginForm(textFocus = textfield)
             }
 
@@ -287,8 +281,6 @@ fun LoginForm(
         elevation = ButtonDefaults.elevatedButtonElevation(),
         shape = RoundedCornerShape(50),
         onClick = {
-//                isLogin.value = true
-            count++
         }) {
         Text(text = "登录")
     }
